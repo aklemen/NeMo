@@ -18,6 +18,10 @@ on:
     branches: [ "main" ]
     types: [ labeled ]
 
+  issue_comment:
+    types: [created]
+    branches: [ "pagaray/nemo_cicd_part23" ]
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
