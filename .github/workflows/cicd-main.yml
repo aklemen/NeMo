@@ -14,10 +14,6 @@
 name: "CICD NeMo"
 
 on:
-  pull_request:
-    branches: [ "main" ]
-    types: [ labeled ]
-
   issue_comment:
     branches: [ "pagaray/nemo_cicd_part23" ]
     types: [ created ]
