@@ -102,6 +102,7 @@ class ParallelMLP(MegatronModule, adapter_mixins.AdapterModuleMixin):
         supported_activations = [
             'gelu',
             'geglu',
+            'relu',
             'reglu',
             'swiglu',
             'squared-relu',
@@ -180,7 +181,7 @@ class ParallelMLP(MegatronModule, adapter_mixins.AdapterModuleMixin):
             self.activation_func = ApproxGELUActivation
         elif onnx_safe:
             self.activation_func = erf_gelu
-        elif activation in ["reglu", "fast-reglu"]:
+        elif activation in ["relu", "reglu", "fast-reglu"]:
             self.activation_func = F.relu
         elif activation in ["swiglu", "fast-swiglu"]:
             # SiLU or sigmoid linear unit is the same as swish with beta = 1 (which is what https://arxiv.org/pdf/2002.05202.pdf uses.)
