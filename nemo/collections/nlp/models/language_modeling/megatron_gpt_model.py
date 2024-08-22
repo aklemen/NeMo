@@ -76,6 +76,8 @@ from nemo.core.neural_types import ChannelType, NeuralType
 from nemo.utils import logging
 from nemo.utils.te_utils import is_float8tensor
 
+import logging as lg
+
 try:
     from megatron.core import InferenceParams, parallel_state, tensor_parallel
     from megatron.core.datasets.blended_megatron_dataset_builder import BlendedMegatronDatasetBuilder
@@ -413,11 +415,11 @@ class MegatronGPTModel(MegatronBaseModel, TextGeneration):
         if self.use_loss_mask and self.transformer_config.sequence_parallel:
             raise ValueError('Loss mask is not supported with sequence parallelism.')
 
-        self.logger = logging.getLogger('MegatronGPTModel')
-        self.logger.setLevel(logging.DEBUG)
+        self.logger = lg.getLogger('MegatronGPTModel')
+        self.logger.setLevel(lg.DEBUG)
         if not self.logger.handlers:
-            ch = logging.StreamHandler()
-            ch.setFormatter(logging.Formatter('%(name)s - %(levelname)s - %(message)s'))
+            ch = lg.StreamHandler()
+            ch.setFormatter(lg.Formatter('%(name)s - %(levelname)s - %(message)s'))
             self.logger.addHandler(ch)
 
     def set_inference_config(self, inference_config):
