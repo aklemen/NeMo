@@ -415,6 +415,11 @@ class MegatronGPTModel(MegatronBaseModel, TextGeneration):
         if self.use_loss_mask and self.transformer_config.sequence_parallel:
             raise ValueError('Loss mask is not supported with sequence parallelism.')
 
+        lg.basicConfig(level=lg.DEBUG, format='%(asctime)s [%(levelname)s] %(message)s', force=True, handlers=[
+            lg.StreamHandler(),
+            lg.FileHandler('/testing/nemo_debug.log'),
+        ])
+
     def set_inference_config(self, inference_config):
         self._inference_config = inference_config
 
