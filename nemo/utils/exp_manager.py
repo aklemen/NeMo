@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging as lg
 import glob
 import os
 import signal
@@ -621,11 +620,6 @@ def exp_manager(trainer: 'pytorch_lightning.Trainer', cfg: Optional[Union[DictCo
         time.sleep(cfg.seconds_to_sleep)
 
     add_handlers_to_mcore_logger()
-
-    lg.basicConfig(level=lg.DEBUG, format='%(asctime)s [%(levelname)s] %(message)s', force=True, handlers=[
-        lg.StreamHandler(),
-        lg.FileHandler(f'{log_dir}/nemo_debug.log'),
-    ])
 
     return log_dir
 
