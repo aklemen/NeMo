@@ -86,7 +86,7 @@ class Logger(metaclass=Singleton):
             try:
                 self._logger = _logging.getLogger("nemo_logger")
                 # By default, silence all loggers except the logger for rank 0
-                self.remove_stream_handlers()
+                # self.remove_stream_handlers()
                 # If NEMO_TESTING is set, add a streamhandler to all ranks
                 if get_envbool(NEMO_ENV_VARNAME_TESTING, False):
                     old_factory = _logging.getLogRecordFactory()
