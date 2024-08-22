@@ -76,6 +76,8 @@ from nemo.core.neural_types import ChannelType, NeuralType
 from nemo.utils import logging
 from nemo.utils.te_utils import is_float8tensor
 
+import logging as lg
+
 try:
     from megatron.core import InferenceParams, parallel_state, tensor_parallel
     from megatron.core.datasets.blended_megatron_dataset_builder import BlendedMegatronDatasetBuilder
@@ -413,6 +415,13 @@ class MegatronGPTModel(MegatronBaseModel, TextGeneration):
         if self.use_loss_mask and self.transformer_config.sequence_parallel:
             raise ValueError('Loss mask is not supported with sequence parallelism.')
 
+        self.logger = lg.getLogger('MegatronGPTModel')
+        self.logger.setLevel(lg.DEBUG)
+        if not self.logger.handlers:
+            ch = lg.StreamHandler()
+            ch.setFormatter(lg.Formatter('%(name)s - %(levelname)s - %(message)s'))
+            self.logger.addHandler(ch)
+
     def set_inference_config(self, inference_config):
         self._inference_config = inference_config
 
@@ -703,16 +712,16 @@ class MegatronGPTModel(MegatronBaseModel, TextGeneration):
             first_val_step=first_val_step,
         )
 
-        print(f'losses_reduced_per_micro_batch: {losses_reduced_per_micro_batch}')
+        self.logger.debug(f'losses_reduced_per_micro_batch: {losses_reduced_per_micro_batch}')
 
         # only the last stages of the pipeline return losses
         if losses_reduced_per_micro_batch:
             if (not forward_only) or self.validation_drop_last:
                 # average loss across micro batches
                 loss_tensors_list = [loss_reduced['avg'] for loss_reduced in losses_reduced_per_micro_batch]
-                print(f'loss_tensors_list: {loss_tensors_list}')
+                self.logger.debug(f'loss_tensors_list: {loss_tensors_list}')
                 loss_tensor = torch.concat(loss_tensors_list)
-                print(f'loss_tensor: {loss_tensor}')
+                self.logger.debug(f'loss_tensor: {loss_tensor}')
                 loss_mean = loss_tensor.mean()
             else:
                 # Get the total loss since micro batches sizes are not uniform
@@ -721,13 +730,13 @@ class MegatronGPTModel(MegatronBaseModel, TextGeneration):
                     for loss_sum in losses_reduced_per_micro_batch
                     if loss_sum['loss_sum_and_ub_size'][1] > 0
                 ]
-                print(f'loss_sum_tensors_list: {loss_sum_tensors_list}')
+                self.logger.debug(f'loss_sum_tensors_list: {loss_sum_tensors_list}')
                 loss_sum = (
                     torch.vstack(loss_sum_tensors_list).sum(axis=0)
                     if len(loss_sum_tensors_list) > 0
                     else torch.tensor([0.0, 0.0]).cuda()
                 )
-                print(f'loss_sum: {loss_sum}')
+                self.logger.debug(f'loss_sum: {loss_sum}')
                 return loss_sum
         else:
             # we're not on the last pipeline stage so no losses
@@ -736,7 +745,7 @@ class MegatronGPTModel(MegatronBaseModel, TextGeneration):
             else:
                 loss_mean = torch.tensor(0.0).cuda()
 
-        print(f'loss_mean: {loss_mean}')
+        self.logger.debug(f'loss_mean: {loss_mean}')
         return loss_mean
 
     def initialize_ub_func(self):
