@@ -108,6 +108,7 @@ def convert(input_nemo_file, output_hf_file, precision=None, cpu_only=False) -> 
     model_config = MegatronGPTModel.restore_from(input_nemo_file, trainer=dummy_trainer, return_config=True)
     model_config.tensor_model_parallel_size = 1
     model_config.pipeline_model_parallel_size = 1
+    model_config.name = "te_gpt"
     if cpu_only:
         map_location = torch.device('cpu')
         model_config.use_cpu_initialization = True
@@ -141,7 +142,7 @@ def convert(input_nemo_file, output_hf_file, precision=None, cpu_only=False) -> 
     ffn_hidden_size = model.cfg.ffn_hidden_size
     num_query_groups = model.cfg.get("num_query_groups", head_num)
 
-    head_size = hidden_size // head_num
+    head_size = model.cfg.get("kv_channels") or (hidden_size // head_num)  # equivalent to hf's head_dim
     heads_per_group = head_num // num_query_groups
     qkv_total_dim = head_num + 2 * num_query_groups
 
