@@ -57,15 +57,18 @@ For grid search, you can provide a list of arguments as follows -
 
 
 import contextlib
+import datetime
 import json
 import os
 import pickle
+import time
 from dataclasses import dataclass, field, is_dataclass
 from pathlib import Path
 from typing import List, Optional
 
 import editdistance
 import numpy as np
+import pandas as pd
 import torch
 from omegaconf import MISSING, OmegaConf
 from sklearn.model_selection import ParameterGrid
@@ -391,7 +394,12 @@ def main(cfg: EvalBeamSearchNGramConfig):
 
         if cfg.preds_output_folder and not os.path.exists(cfg.preds_output_folder):
             os.mkdir(cfg.preds_output_folder)
+
+        eval_df = pd.DataFrame(columns=['beam_size', 'wer', 'cer', 'run_duration', 'run_duration_in_seconds'])
+        eval_file = os.path.join(cfg.preds_output_folder, "evaluation.tsv")
         for hp in hp_grid:
+            logging.info(f"Searching for beam size {hp['beam_width']} ...")
+
             if cfg.preds_output_folder:
                 preds_output_file = os.path.join(
                     cfg.preds_output_folder,
@@ -400,6 +408,7 @@ def main(cfg: EvalBeamSearchNGramConfig):
             else:
                 preds_output_file = None
 
+            start_time = time.time()
             candidate_wer, candidate_cer = beam_search_eval(
                 asr_model,
                 cfg,
@@ -414,6 +423,7 @@ def main(cfg: EvalBeamSearchNGramConfig):
                 progress_bar=True,
                 punctuation_capitalization=punctuation_capitalization,
             )
+            run_duration = time.time() - start_time
 
             if candidate_cer < best_cer:
                 best_cer_beam_size = hp["beam_width"]
@@ -426,6 +436,17 @@ def main(cfg: EvalBeamSearchNGramConfig):
                 best_wer_alpha = hp["beam_alpha"]
                 best_wer_beta = hp["beam_beta"]
                 best_wer = candidate_wer
+
+            new_eval_df = pd.DataFrame({
+                'beam_size': [hp["beam_width"]],
+                'wer': [candidate_wer],
+                'cer': [candidate_cer],
+                'run_duration': [str(datetime.timedelta(seconds=run_duration))],
+                'run_duration_in_seconds': [round(run_duration, 3)],
+            })
+            eval_df = pd.concat([eval_df, new_eval_df], ignore_index=True)
+            eval_df.to_csv(eval_file, sep='\t', index=False)
+            logging.info(eval_df.to_string())
 
         logging.info(
             f'Best WER Candidate = {best_wer:.2%} :: Beam size = {best_wer_beam_size}, '
