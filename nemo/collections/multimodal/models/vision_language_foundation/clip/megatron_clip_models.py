@@ -23,10 +23,10 @@ from typing import Any, Optional
 import numpy as np
 import torch
 import torch.nn.functional as F
+from lightning.pytorch.accelerators import CPUAccelerator
+from lightning.pytorch.trainer.trainer import Trainer
 from omegaconf import OmegaConf
 from omegaconf.dictconfig import DictConfig
-from pytorch_lightning.accelerators import CPUAccelerator
-from pytorch_lightning.trainer.trainer import Trainer
 from tqdm import tqdm
 
 from nemo.collections.multimodal.data.clip.clip_dataset import (
@@ -812,7 +812,7 @@ class MegatronCLIPModel(MegatronBaseModel):
                     ddp_config,
                     model_chunk,
                     data_parallel_group=parallel_state.get_data_parallel_group(with_context_parallel=True),
-                    expert_data_parallel_group=parallel_state.get_data_modulo_expert_parallel_group(),
+                    expert_data_parallel_group=parallel_state.get_expert_data_parallel_group(),
                     # Turn off bucketing for model_chunk 2 onwards, since communication for these
                     # model chunks is overlapped with compute anyway.
                     disable_bucketing=(model_chunk_idx > 0),
