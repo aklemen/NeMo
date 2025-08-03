@@ -351,11 +351,11 @@ class BeamCTCInfer(AbstractBeamCTCInfer):
 
         if self.default_beam_scorer is None:
             # Check for filepath
-            if self.ngram_lm_model is None or not os.path.exists(self.ngram_lm_model):
-                raise FileNotFoundError(
-                    f"KenLM binary file not found at : {self.ngram_lm_model}. "
-                    f"Please set a valid path in the decoding config."
-                )
+            # if self.ngram_lm_model is None or not os.path.exists(self.ngram_lm_model):
+            #     raise FileNotFoundError(
+            #         f"KenLM binary file not found at : {self.ngram_lm_model}. "
+            #         f"Please set a valid path in the decoding config."
+            #     )
 
             # perform token offset for subword models
             if self.decoding_type == 'subword':
