@@ -477,15 +477,7 @@ class SALM(LightningModule, HFHubMixin):
 
                 # Adjust attention module to use the local number of heads
                 attn_layer = transformer_block.self_attn
-
-                logging.info(f"Attention layer: {attn_layer}")
-
-                attributes = ["num_heads", "num_attention_heads", "num_key_value_heads", "num_kv_heads", "hidden_size"]
-                for attr in attributes:
-                    if not hasattr(attn_layer, attr):
-                        logging.warning(f"attn_layer.{attr} is not available, skipping tensor parallelism for this attribute.")
-                        continue
-
+                for attr in ("num_heads", "num_key_value_heads", "hidden_size"):
                     val = getattr(attn_layer, attr)
                     if val % tp_mesh.size() != 0:
                         logging.warning(
